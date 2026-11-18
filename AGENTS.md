@@ -6,7 +6,7 @@ Tài liệu này áp dụng cho mọi AI coding agent và thành viên khi chỉ
 
 ## 1. Phạm vi & Ràng buộc Công nghệ
 
-- **Thư mục mã nguồn:** Chỉ code trong `lan-chat-p2p/`. Không tự ý tạo thêm file `.py` mới hoặc gộp các module lại thành 1 file.
+- **Thư mục mã nguồn:** Chỉ code trong `lan-chat-p2p/` (bao gồm 5 module core CLI và thư mục giao diện `lan-chat-p2p/fe/`). Không tự ý gộp các module core lại thành 1 file.
 - **Mạng & Đa luồng:** **Chỉ** sử dụng thư viện chuẩn Python (`socket`, `threading`, `argparse`, `os`, `time`, `dataclasses`, `pathlib`).
 - **UI & Tiện ích:** **Chỉ** sử dụng 3 thư viện trong `lan-chat-p2p/requirements.txt` (`prompt_toolkit`, `rich`, `tqdm`).
 - **Cấm:** Không dùng `asyncio`, framework mạng cấp cao (`aiohttp`, `twisted`, `websockets`, ...), hoặc tự thêm package ngoài.
