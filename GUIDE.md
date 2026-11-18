@@ -39,9 +39,9 @@ Không sửa các file khác, không thêm thư viện ngoài requirements.txt.
 
 ## 4. Checklist Kiểm thử trước khi Merge vào `main`
 
-- [ ] `python -m py_compile lan-chat-p2p/*.py` chạy không lỗi.
-- [ ] Chạy 2–3 instance cùng lúc (`--port 5000`, `5001`, `5002`) thấy nhau trong `/list` sau ~3s; tắt 1 instance biến mất sau 10s.
-- [ ] Đang gõ dở câu lệnh/tin nhắn mà peer khác gửi tới: chữ đang gõ được giữ nguyên phía dưới.
-- [ ] Peer thứ 3 nhắn khi đang chat với peer thứ 2: hiện thông báo `(N unread)`, `/chat` sang thì in đủ tin chưa đọc.
-- [ ] `/send <file>` chạy ở luồng riêng, hiện `%`, chat vẫn hoạt động bình thường; file nhận nằm đúng trong `downloads/` (không commit file test vào Git).
-- [ ] Rút kết nối hoặc gửi sai lệnh không làm crash chương trình; truyền file đứt giữa chừng phải xóa partial file.
+- [x] `python -m py_compile lan-chat-p2p/*.py` chạy không lỗi.
+- [x] Chạy 2–3 instance cùng lúc (`--port 5000`, `5001`, `5002`) thấy nhau trong `/list` sau ~3s; tắt 1 instance biến mất sau 10s.
+- [x] Đang gõ dở câu lệnh/tin nhắn mà peer khác gửi tới: chữ đang gõ được giữ nguyên phía dưới.
+- [x] Peer thứ 3 nhắn khi đang chat với peer thứ 2: hiện thông báo `(N unread)`, `/chat` sang thì in đủ tin chưa đọc.
+- [x] `/send <file>` chạy ở luồng riêng, hiện `%`, chat vẫn hoạt động bình thường; file nhận nằm đúng trong `downloads/` (không commit file test vào Git).
+- [x] Rút kết nối hoặc gửi sai lệnh không làm crash chương trình; truyền file đứt giữa chừng phải xóa partial file.
