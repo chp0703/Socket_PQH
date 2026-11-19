@@ -12,7 +12,7 @@ BÁO CÁO KỸ THUẬT ĐỒ ÁN · LẬP TRÌNH MẠNG
 
 **Tóm tắt.** Ứng dụng cho phép các node trong cùng mạng LAN/Wi-Fi tự phát hiện nhau qua UDP broadcast, sau đó mở kết nối TCP trực tiếp để nhắn tin và chia sẻ tệp. Console CLI và Zalo PC Web UI là hai cách vận hành cùng lõi mạng Python. Báo cáo mô tả ranh giới giữa các module, cách bảo toàn khung dữ liệu khi có nhiều luồng, đường đi của tin nhắn và tệp, cùng kết quả kiểm thử có thể đối chiếu.
 
-**Phạm vi đối chiếu** · Repo Socket_PQH, nhánh `main`, commit `843413a` · 18/11/2026
+**Phạm vi đối chiếu** · Repo Socket_PQH, nhánh `main` (cơ sở commit `74b4f08`, bổ sung `tests/test_p2p.py`) · 19/11/2026
 
 ### Nội dung báo cáo
 
@@ -39,13 +39,13 @@ Trong cùng mạng LAN/Wi-Fi, người dùng cần thấy những ai đang chạ
 
 Địa chỉ broadcast mặc định là `DEFAULT_BCAST = "255.255.255.255"`. Cổng UDP có thể đổi bằng `--udp-port` và các node cần dùng cùng cổng discovery để phát hiện nhau. Cùng một máy, các instance dùng cổng TCP nghe khác nhau. Đặc tính tầng giao vận được đối chiếu với [RFC 768](https://www.rfc-editor.org/rfc/rfc768.html) và [RFC 9293, mục 2.2](https://www.rfc-editor.org/rfc/rfc9293.html#section-2.2). Cấu hình ứng dụng nằm ở [protocol.py](lan-chat-p2p/protocol.py) và [lanchat.py](lan-chat-p2p/lanchat.py).
 
-### 1.3. Phân công theo GUIDE.md
+### 1.3. Phân công nhóm theo GUIDE.md
 
-| Họ và tên | MSSV | Phạm vi ghi trong hướng dẫn |
+| Họ và tên | MSSV | Phạm vi phụ trách |
 | --- | --- | --- |
-| Châu Hòa Phát | 25127224 | `protocol.py`, `udp_discovery.py` và `lanchat.py`. Thiết kế định dạng gói, phát hiện peer, xử lý lệnh và tích hợp các module CLI. |
+| Châu Hòa Phát | 25127224 | `protocol.py`, `udp_discovery.py`, `lanchat.py` và thư mục `fe/` (`server.py`, `index.html`, `styles.css`, `app.js`). Thiết kế định dạng gói, phát hiện peer, xử lý lệnh CLI, phụ trách giao diện Zalo PC Web UI và cầu nối HTTP. |
 | Huỳnh Nguyễn Thế Hiển | 25127327 | `console_ui.py` và `tcp_manager.py`. Nhập liệu song song với thông báo, điều phối phiên TCP, tin chưa đọc và truyền tệp theo khối. |
-| Đỗ Nguyễn Nhật Quang | 25127478 | Thành viên theo danh sách nhóm. `GUIDE.md` chỉ ghi phạm vi của Phát và Hiển. Phần việc của Quang và người phụ trách `fe/` chưa được xác định trong tài liệu này. |
+| Đỗ Nguyễn Nhật Quang | 25127478 | `REPORT.md`, `REPORT.pdf` và hỗ trợ kiểm thử (`tests/test_p2p.py`). Hỗ trợ hoàn thiện báo cáo kỹ thuật và kiểm thử chức năng CLI, Web UI cùng các tình huống xử lý lỗi. |
 
 Nguồn phân công và ràng buộc triển khai. [GUIDE.md](GUIDE.md) · [AGENTS.md](AGENTS.md) · [README.md](README.md).
 
@@ -82,7 +82,8 @@ flowchart LR
 | [`fe/index.html`](lan-chat-p2p/fe/index.html) | Bốn vùng giao diện gồm điều hướng, danh sách peer, chat và khung thông tin. `#emptyChatScreen` và `#activeChatContainer` biểu diễn hai trạng thái chính. |
 | [`fe/styles.css`](lan-chat-p2p/fe/styles.css) | Bố cục `.zalo-workspace`, bong bóng tin nhắn, thẻ tệp, tiến độ, hiệu ứng Like và thanh thông tin co giãn. |
 | [`fe/app.js`](lan-chat-p2p/fe/app.js) | `pollBackendState` lấy dữ liệu, `renderConversationList` và `renderActiveChat` vẽ giao diện. `selectPeer` và các sự kiện DOM gọi API. |
-| [`README.md`](lan-chat-p2p/README.md), [`CONTRACTS.md`](lan-chat-p2p/CONTRACTS.md) | Hướng dẫn chạy CLI, demo Wireshark và hợp đồng API của năm module Python ban đầu. |
+| [`README.md`](lan-chat-p2p/README.md), [`CONTRACTS.md`](lan-chat-p2p/CONTRACTS.md) | Hướng dẫn cài đặt, chạy (Zalo Web UI và CLI), kiểm thử tự động, demo Wireshark và hợp đồng API của năm module Python lõi. |
+| [`tests/test_p2p.py`](lan-chat-p2p/tests/test_p2p.py) | Bộ kiểm thử tự động (`unittest`) cho `protocol.py`, UDP discovery & timeout 10 giây, chat đa peer & `unread`, truyền tệp, 8 lệnh CLI, 4 tình huống lỗi và cầu nối Web UI. |
 | [`requirements.txt`](lan-chat-p2p/requirements.txt), [`.gitignore`](lan-chat-p2p/.gitignore), `downloads/.gitkeep` | Ba phụ thuộc CLI. Git bỏ qua môi trường ảo, cache và dữ liệu trong `downloads/`, ngoại trừ `.gitkeep` để giữ thư mục. |
 
 ## Chương 3. Mô hình đa luồng và đồng bộ hóa
@@ -151,6 +152,17 @@ Với `MSG`, `recv_exact` lặp `sock.recv(min(CHUNK_SIZE, n - len(buf)))` tới
 
 `show_peers` và `show_help` dựng `rich.table.Table` cho `/list` và `/help`. `update_progress` cập nhật thanh `tqdm` theo số byte. Khi in thông báo cùng lúc có thanh đang hoạt động, `_print_with_bars_paused` gọi `bar.clear()`, `self._console.print()` rồi `bar.refresh()` dưới khóa UI. Ba phụ thuộc khai báo là `prompt_toolkit>=3.0.43`, `rich>=13.7.0` và `tqdm>=4.66.0`. [console_ui.py](lan-chat-p2p/console_ui.py) · [lanchat.py](lan-chat-p2p/lanchat.py) · [requirements.txt](lan-chat-p2p/requirements.txt).
 
+| Lệnh CLI | Xử lý trong `handle_command` và module lõi |
+| --- | --- |
+| `/list` | Gọi `UDPDiscovery.get_peers()` và hiển thị bảng `#`, `Name`, `IP Address`, `TCP Port`, `Status` qua `ConsoleUI.show_peers`. |
+| `/chat <name\|number>` | Tra peer theo STT 1-based hoặc tên (`resolve_peer`), mở kết nối TCP hoặc chuyển phiên hiện tại và in các tin `unread` nếu có. |
+| `<any text>` | Mọi dòng không bắt đầu bằng `/` được gửi tới `_current_partner` qua `TCPManager.send_chat`. |
+| `/send <file>` | Kiểm tra tệp tồn tại rồi tạo luồng nền gửi tệp theo khối `8192` byte (`send_file_async`), giữ nguyên luồng nhập CLI. |
+| `/leave` | Gửi khung `BYE\|`, đóng socket phiên hiện tại (`leave_chat`) và đưa đối tác hoạt động về rỗng. |
+| `/status <online\|away>` | Xác thực trạng thái thuộc `VALID_STATUSES`, cập nhật `UDPDiscovery.set_status` và phát gói `HELLO` ngay lập tức. |
+| `/help` | Hiển thị bảng hướng dẫn toàn bộ 8 lệnh CLI qua `ConsoleUI.show_help`. |
+| `/quit` | Thoát vòng lặp nhập, gọi `discovery.stop()`, gửi `BYE\|` cho các phiên đang mở trong `tcp.stop()` và đóng `ConsoleUI`. |
+
 ### 5.2. Cầu nối HTTP và các endpoint
 
 `fe/server.py:main` bind `ThreadingHTTPServer` tại `127.0.0.1`, cổng mặc định 8080 (`--web-port`). `make_handler` tạo `ZaloUIHandler` từ `SimpleHTTPRequestHandler` của thư viện chuẩn Python. Handler phục vụ các tài nguyên tĩnh từ `FE_DIR` và gọi `BridgeState` cho lớp API. Luồng HTTP phục vụ trình duyệt trên máy cục bộ, còn `state.discovery` và `state.tcp` trực tiếp giao tiếp với peer qua UDP/TCP.
@@ -198,7 +210,7 @@ python fe/server.py --name NodeB --port 5001 --web-port 8080
 
 ### 6.2. Giảm thời gian khám phá node vừa khởi động
 
-Nếu chỉ chờ bản tin định kỳ, node mới có thể phải chờ gần một chu kỳ `BROADCAST_INTERVAL = 3.0` giây để thấy node cũ. `_handle_datagram` đặt `is_new_peer = True` khi thêm tên mới, nhả `_lock` rồi gọi ngay `_send_presence_once`. Discovery hai chiều có thể hoàn tất ngay sau lượt phản hồi nếu datagram đến được. Độ trễ tính theo mili-giây chưa được đo trong báo cáo. [udp_discovery.py](lan-chat-p2p/udp_discovery.py#L153).
+Nếu chỉ chờ bản tin định kỳ, node mới có thể phải chờ gần một chu kỳ `BROADCAST_INTERVAL = 3.0` giây để thấy node cũ. `_handle_datagram` đặt `is_new_peer = True` khi thêm tên mới, nhả `_lock` rồi gọi ngay `_send_presence_once`. Discovery hai chiều có thể hoàn tất ngay sau lượt phản hồi nếu datagram đến được. Độ trễ tính theo mili-giây chưa được đo trong báo cáo. [udp_discovery.py](lan-chat-p2p/udp_discovery.py#L176).
 
 ### 6.3. Nhận diện tên từ kết nối TCP đến
 
@@ -210,38 +222,43 @@ Nếu chỉ chờ bản tin định kỳ, node mới có thể phải chờ gầ
 
 ### 6.5. Đóng socket và xử lý tệp nhận dở
 
-Khi thoát, `TCPManager.stop` chụp danh sách worker còn chạy trong `_file_threads` rồi gọi `t.join(timeout=2.0)` cho từng luồng. `stop` và `leave_chat` đều cố gửi `encode_bye()`, gọi `sock.shutdown(socket.SHUT_WR)` rồi `sock.close()`. Trình tự này hỗ trợ đóng chiều gửi có trật tự, kể cả khi chạy qua Winsock. Ở phía nhận, EOF sớm gây `ConnectionError`. `_receive_file` thử `os.remove(dest_path)` trong nhánh lỗi và truyền lỗi lên vòng nhận để dọn kết nối. Lỗi xóa tệp được bỏ qua. Chương trình hiện không có xác nhận ghi tệp từ peer nhận. [tcp_manager.py](lan-chat-p2p/tcp_manager.py#L86) · [tcp_manager.py](lan-chat-p2p/tcp_manager.py#L443).
+Khi thoát, `TCPManager.stop` chụp danh sách worker còn chạy trong `_file_threads` rồi gọi `t.join(timeout=2.0)` cho từng luồng. `stop` và `leave_chat` đều cố gửi `encode_bye()`, gọi `sock.shutdown(socket.SHUT_WR)` rồi `sock.close()`. Trình tự này hỗ trợ đóng chiều gửi có trật tự, kể cả khi chạy qua Winsock. Ở phía nhận, EOF sớm gây `ConnectionError`. `_receive_file` thử `os.remove(dest_path)` trong nhánh lỗi và truyền lỗi lên vòng nhận để dọn kết nối. Lỗi xóa tệp được bỏ qua. Chương trình hiện không có xác nhận ghi tệp từ peer nhận. [tcp_manager.py (stop/leave)](lan-chat-p2p/tcp_manager.py#L86) · [tcp_manager.py (_receive_file)](lan-chat-p2p/tcp_manager.py#L443).
 
 ### 6.6. Giảm nguy cơ Path Traversal khi xử lý tên tệp
 
 `encode_file_header` và `read_frame_header` lấy `os.path.basename()`. `_receive_file` lấy basename lần nữa trước khi ghép với `downloads_dir`. Web thực hiện cùng bước ở lượt upload, phục vụ nội dung, mở tệp và hiện vị trí tệp. Biện pháp này bỏ thành phần thư mục theo quy tắc đường dẫn của hệ điều hành. Mã hiện mở đích bằng `"wb"`, nên hai tệp cùng tên có thể ghi đè. Kiểm soát liên kết tệp và chính sách xử lý tên trùng nằm ngoài cơ chế basename hiện tại. [protocol.py](lan-chat-p2p/protocol.py#L84) · [tcp_manager.py](lan-chat-p2p/tcp_manager.py#L443) · [fe/server.py](lan-chat-p2p/fe/server.py#L255).
 
+### 6.7. Xử lý lỗi phiên ngắt, peer ngoại tuyến, thiếu tệp và lệnh sai
+
+- **Peer đóng kết nối hoặc crash:** `_receiver_loop` bắt `EOF`, `BYE|`, `ConnectionError`, `OSError` hoặc `ValueError` và gọi `_cleanup_connection`. Nếu socket thuộc `_current_partner`, trạng thái đối tác được đặt về `None` và callback báo thông báo quay về dấu nhắc chính; nếu `send_chat` gặp `OSError`, lõi cũng báo lỗi qua `on_error` và dọn kết nối tương tự.
+- **Kết nối tới peer đã ngoại tuyến:** Nếu peer không có trong bảng UDP (hoặc `tcp_port <= 0`) hay từ chối kết nối TCP (`ConnectionRefusedError` / timeout 5 giây), `connect_peer` đóng socket, báo qua `on_error` và trả `False` mà không làm dừng chương trình.
+- **Thiếu tệp hoặc gián đoạn truyền:** `send_file_async` chuẩn hóa dấu ngoặc kép bao quanh đường dẫn, kiểm tra `os.path.isfile(clean_path)` trước khi khởi chạy worker và báo lỗi ngay nếu không tìm thấy tệp; trường hợp đứt kết nối giữa chừng được `_receive_file` xóa bỏ tệp nhận dở như mô tả ở mục 6.5.
+- **Lệnh không hợp lệ:** `handle_command` giữ vòng lặp CLI hoạt động liên tục và gọi `ui.print_error` gợi ý người dùng xem `/help` khi gặp lệnh lạ hoặc thiếu tham số cho `/chat`, `/send`, `/status`. [lanchat.py](lan-chat-p2p/lanchat.py#L52) · [tcp_manager.py](lan-chat-p2p/tcp_manager.py#L131).
+
 ## Chương 7. Kiểm thử và phân tích gói tin với Wireshark
 
 ### 7.1. Kết quả kiểm tra trên máy Windows
 
-Kiểm tra thực hiện bằng Python 3.12.14 trên mã nguồn tại commit `843413a`. Bài chạy tích hợp khởi động hai tiến trình `fe/server.py` với `--no-browser`, hai thư mục `downloads/` độc lập, cùng cổng UDP 51963 và hai cổng TCP 54823/54824. Chương trình kiểm thử gọi HTTP qua loopback. Hai node trao đổi UDP tới `127.255.255.255` và kết nối TCP qua `127.0.0.1`.
+Kiểm tra thực hiện bằng Python `3.12.2` (`py -3.12`) trên mã nguồn repo `Socket_PQH` kèm bộ kiểm thử tự động [`tests/test_p2p.py`](lan-chat-p2p/tests/test_p2p.py). Các kịch bản tích hợp dùng socket thật trên loopback (`127.255.255.255` cho UDP broadcast, `127.0.0.1` cho TCP và HTTP) với cổng cấp phát động và thư mục `downloads/` tạm độc lập.
 
 | Kịch bản | Kết quả quan sát |
 | --- | --- |
-| Biên dịch cú pháp | Cả 6 tệp Python biên dịch thành công. |
-| Unit test `protocol.py` | **8/8 đạt.** Round-trip và kiểm tra gói `HELLO` lỗi, `PEER` / `BYE` và EOF sạch, khung UTF-8 liền nhau, header `FILE`, giới hạn 1024 byte, EOF sớm và payload trả về thành nhiều phần. |
-| Hai instance trên một máy | Hai node thấy nhau, nhận thay đổi `away` và loại node đã dừng sau khi bản ghi discovery hết hạn. |
-| Chat TCP và unread | `NodeB` nhận đúng `Chào bạn 👍` và có 1 tin chưa đọc trước khi chọn `NodeA`. Chọn phiên xóa bộ đếm, tin phản hồi tới được `NodeA`. `/api/leave` đưa cả hai đối tác hoạt động về rỗng. |
-| Like | Bộ đếm trên `NodeB` tăng từ 0 lên 1. Bản ghi tương ứng trên `NodeA` vẫn là 0. |
-| Truyền một tệp ảnh | Upload `demo.bmp` qua `/api/send_file`, nhận thẻ tệp ở `NodeB`. Tệp 12.342 byte trong `downloads/` và nội dung `GET /downloads/demo.bmp` đều trùng từng byte với ảnh gửi. HTTP trả kiểu MIME ảnh và `Content-Disposition: inline`. |
+| Biên dịch cú pháp và lint | Cả 7 tệp Python biên dịch (`py_compile`) và kiểm tra `ruff check` đạt sạch không cảnh báo. |
+| Unit test `protocol.py` (7 ca) | **7/7 đạt.** Round-trip và kiểm tra gói `HELLO` lỗi, `PEER` / `BYE` và EOF sạch, khung UTF-8 (`Chào bạn 👍` = 16 byte) nối liền nhau, header `FILE` + basename, giới hạn 1024 byte, EOF sớm và `recv_exact` phân mảnh. |
+| UDP discovery 2 instance | Hai node thấy nhau, phân giải theo STT `1` hoặc tên không phân biệt hoa thường, nhận thay đổi `away` và tự loại node dừng sau `PEER_TIMEOUT = 10.0s` kèm thông báo `went offline`. |
+| Chat TCP, peer thứ 3 và `unread` | Trong lúc `NodeB` chat với `NodeA`, `NodeC` gửi 2 tin tạo `(unread, 1)` và `(unread, 2)`. Chuyển `/chat` sang `NodeC` trả đủ 2 tin, xóa bộ đếm; `/leave` đóng phiên và đưa đối tác về rỗng. |
+| Truyền tệp song song với chat | `NodeA` gửi tệp nhị phân 256 KB qua `send_file_async` đồng thời nhận tin nhắn từ `NodeB`; tiến độ đạt 100% và tệp nhận khớp SHA-256 từng byte. |
+| 4 tình huống xử lý lỗi (mục 5.3) | Báo lỗi không crash khi kết nối peer offline hoặc thiếu tệp; truyền tệp đứt giữa chừng tự xóa ngay tệp nhận dở `broken.bin`; `../escape.txt` bị cắt còn `escape.txt` trong `downloads/`. |
+| CLI 8 lệnh, giữ dòng đang gõ và 2 tiến trình | Đủ 8 lệnh + lệnh lạ (`/unknown`) chạy đúng; `PromptSession` + `patch_stdout` giữ nguyên chuỗi `"you can che"` khi luồng nền in `[Minh] ok, which part?`; bảng `rich` và `tqdm` hoạt động; 2 tiến trình `lanchat.py` giao tiếp qua pipe và thoát mã `0`. |
+| Tích hợp 2 node Web UI (`fe/server.py`) | Hai `ThreadingHTTPServer` trao đổi UDP `away`, chat `Chào bạn 👍`, tăng Like cục bộ trên `NodeB` (giữ `0` trên `NodeA`), gửi/nhận `demo.bmp` (70 byte) qua `/api/send_file` và `GET /downloads/demo.bmp` (`image`, `Content-Disposition: inline`). |
 
-SHA-256 của tệp ảnh đối chiếu.
-
-```text
-0787e160da856a87340547de4f51cd6922d367a70a3d82b11f494e6d24645c67
-```
+Tổng kết chạy `py -3.12 -m unittest discover -s tests -v`: **16/16 ca kiểm thử đạt** (thời gian chạy khoảng 19,5 giây, trong đó có phép thử chờ hết hạn UDP 10 giây thực).
 
 ### 7.2. Phạm vi demo theo tài liệu nhóm
 
-`GUIDE.md` có mục đã đánh dấu cho kiểm thử nhiều terminal CLI, giữ dòng đang gõ, tin đến từ peer thứ ba, tiến độ truyền tệp và dọn tệp nhận dở. Báo cáo ghi nhận các mục này theo checklist. Phiên kiểm tra ở mục 7.1 chạy hai node Web qua HTTP và socket thật trên cùng máy, chưa chạy lại các ca CLI tương tác hoặc thao tác giao diện bằng trình duyệt.
+`GUIDE.md` có checklist đã đánh dấu cho nhiều terminal CLI, giữ dòng đang gõ, tin đến từ peer thứ ba, tiến độ truyền tệp và dọn tệp nhận dở; các kịch bản lõi tương ứng hiện đã có thể tái lập tự động qua [`tests/test_p2p.py`](lan-chat-p2p/tests/test_p2p.py). Lưu ý môi trường chạy kiểm thử tự động `PromptSession` sử dụng `create_pipe_input` và `DummyOutput` thay cho console TTY vật lý, còn thao tác trực tiếp bằng chuột/bàn phím trên trình duyệt Chrome cần chạy thực tế khi demo.
 
-Ca **hai máy LAN/Wi-Fi** và ảnh chụp Wireshark hiện chưa có bằng chứng đính kèm. Để làm demo, chạy một node trên mỗi máy cùng LAN với tên khác nhau, dùng cùng cổng UDP và cổng TCP mặc định nếu còn trống. Kiểm tra thấy nhau qua `/list`, gửi và đáp một tin UTF-8, truyền một ảnh và so sánh tệp nhận trong `downloads/`. Bắt đầu capture trước khi hai node khởi chạy để thu cả discovery và giai đoạn thiết lập TCP. [GUIDE.md](GUIDE.md) · [Hướng dẫn chạy và demo](lan-chat-p2p/README.md).
+Ca **hai máy LAN/Wi-Fi** và **2 ảnh chụp Wireshark** hiện chưa có bằng chứng đính kèm. Để làm demo, chạy một node trên mỗi máy cùng LAN với tên khác nhau, dùng cùng cổng UDP và cổng TCP mặc định nếu còn trống. Kiểm tra thấy nhau qua `/list`, gửi và đáp một tin UTF-8, truyền một ảnh và so sánh tệp nhận trong `downloads/`. Bắt đầu capture trước khi hai node khởi chạy để thu cả discovery và giai đoạn thiết lập TCP. [GUIDE.md](GUIDE.md) · [Hướng dẫn chạy và demo](lan-chat-p2p/README.md).
 
 ### 7.3. Đọc capture UDP và TCP
 
@@ -265,4 +282,4 @@ Tham chiếu thao tác và nguyên lý đọc capture. [Wireshark User’s Guide
 
 ### Kết luận
 
-Kết quả loopback xác nhận hai node dùng UDP để tìm và cập nhật hiện diện, sau đó dùng cùng phiên TCP cho tin nhắn UTF-8 và truyền tệp ảnh đúng byte. `read_frame_header`, trường chiều dài và khóa gửi theo peer bảo toàn ranh giới khung trên luồng TCP. Demo hai máy và hai ảnh capture sẽ bổ sung bằng chứng về hành vi trên LAN/Wi-Fi.
+Kết quả kiểm thử loopback xác nhận hai node dùng UDP để tìm và cập nhật hiện diện (bao gồm timeout 10 giây), sau đó dùng cùng phiên TCP cho tin nhắn UTF-8, hàng đợi `unread`, xử lý 4 tình huống lỗi và truyền tệp song song đúng từng byte qua cả Console CLI lẫn Zalo PC Web UI. `read_frame_header`, trường chiều dài và khóa gửi theo peer bảo toàn ranh giới khung trên luồng TCP. Demo trên 2 máy LAN/Wi-Fi và hai ảnh chụp Wireshark sẽ bổ sung bằng chứng thực tế trên hạ tầng mạng rời.

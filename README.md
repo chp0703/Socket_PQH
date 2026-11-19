@@ -32,6 +32,8 @@ Socket_PQH/
 ├── README.md                     # Thông tin tổng quan đồ án, thành viên (MSSV) và cấu trúc repo
 ├── AGENTS.md                     # Quy tắc kiến trúc và ràng buộc kỹ thuật của codebase
 ├── GUIDE.md                      # Phân công công việc, lộ trình triển khai và checklist kiểm thử
+├── REPORT.md                     # Báo cáo kỹ thuật đồ án (Markdown)
+├── REPORT.pdf                    # Báo cáo kỹ thuật đồ án (định dạng tiểu luận ĐH KHTN - ĐHQG HCM)
 └── lan-chat-p2p/                 # Thư mục mã nguồn ứng dụng chính
     ├── downloads/
     │   └── .gitkeep              # Thư mục lưu file gửi/nhận qua TCP
@@ -40,6 +42,8 @@ Socket_PQH/
     │   ├── styles.css            # Thiết kế giao diện Zalo, thanh Thông tin [LAN] kéo/đóng & hover Like
     │   ├── app.js                # Logic đồng bộ peer LAN, chat, thả Like và mở file trực tiếp
     │   └── server.py             # Cầu nối HTTP (stdlib http.server) nối Web UI với UDPDiscovery & TCPManager
+    ├── tests/
+    │   └── test_p2p.py           # Bộ kiểm thử tự động (protocol, UDP, TCP, CLI, xử lý lỗi, Web UI)
     ├── lanchat.py                # Entry point chế độ CLI, argparse & vòng lặp điều phối 8 lệnh
     ├── protocol.py               # Hằng số giao thức, PeerInfo, encode/decode UDP & TCP framing
     ├── udp_discovery.py          # UDP broadcaster/listener (cổng 9999), bảng peer online & timeout 10s

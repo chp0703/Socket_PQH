@@ -102,6 +102,20 @@ python lanchat.py --name Hien --port 5001
 | `/help` | Hiển thị bảng danh sách các lệnh hỗ trợ |
 | `/quit` | Gửi thông báo đóng kết nối (`BYE\|`) và thoát chương trình sạch sẽ |
 
+### 3.3. Kiểm thử tự động (Test)
+
+```bash
+cd lan-chat-p2p
+
+# Kiểm tra biên dịch cú pháp tất cả module Python
+py -3.12 -m py_compile protocol.py udp_discovery.py tcp_manager.py console_ui.py lanchat.py fe/server.py tests/test_p2p.py
+
+# Chạy toàn bộ bộ kiểm thử tự động (unit + tích hợp loopback)
+py -3.12 -m unittest discover -s tests -v
+```
+
+*(Kiểm thử bao gồm: unit test `protocol.py`, UDP discovery & timeout `10s`, chat đa peer & `unread`, truyền file song song với chat, 8 lệnh CLI + giữ nguyên dòng đang gõ, 4 tình huống xử lý lỗi và cầu nối HTTP `fe/server.py`).*
+
 ---
 
 ## 4. Tóm tắt Kỹ thuật

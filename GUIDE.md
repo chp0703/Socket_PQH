@@ -1,6 +1,6 @@
 # GUIDE.md — Hướng dẫn Triển khai & Phân công Công việc
 
-Tài liệu phân chia module, quy trình phối hợp và checklist kiểm thử cho **Phát** và **Hiển**.
+Tài liệu phân chia module, quy trình phối hợp và checklist kiểm thử cho **Phát**, **Hiển** và **Quang**.
 
 ---
 
@@ -8,8 +8,9 @@ Tài liệu phân chia module, quy trình phối hợp và checklist kiểm th�
 
 | Thành viên | File phụ trách | Nhiệm vụ chính | Nhánh Git gợi ý |
 | :--- | :--- | :--- | :--- |
-| **Phát** | `lan-chat-p2p/protocol.py`<br>`lan-chat-p2p/udp_discovery.py`<br>`lan-chat-p2p/lanchat.py` | - Hiện thực `PeerInfo`, encode/decode UDP `HELLO\|`, TCP framing (`MSG\|`, `FILE\|`, `BYE\|`), `recv_exact`, `read_frame_header`<br>- Hiện thực UDP discovery (`9999`), broadcast `3s`, listener, bảng peer online (`Lock`), timeout `10s`, `/status`<br>- Hiện thực CLI `argparse` (`--name`, `--port`, `--bcast`), điều phối 8 lệnh và ghép nối các module | `feat/protocol`<br>`feat/udp-discovery`<br>`feat/lanchat-cli` |
+| **Phát** | `lan-chat-p2p/protocol.py`<br>`lan-chat-p2p/udp_discovery.py`<br>`lan-chat-p2p/lanchat.py`<br>`lan-chat-p2p/fe/` (`server.py`, `index.html`, `styles.css`, `app.js`) | - Hiện thực `PeerInfo`, encode/decode UDP `HELLO\|`, TCP framing (`MSG\|`, `FILE\|`, `BYE\|`), `recv_exact`, `read_frame_header`<br>- Hiện thực UDP discovery (`9999`), broadcast `3s`, listener, bảng peer online (`Lock`), timeout `10s`, `/status`<br>- Hiện thực CLI `argparse` (`--name`, `--port`, `--bcast`), điều phối 8 lệnh và ghép nối các module<br>- Phụ trách giao diện Zalo PC Web UI (`fe/`) và cầu nối HTTP với lõi UDP/TCP | `feat/protocol`<br>`feat/udp-discovery`<br>`feat/lanchat-cli`<br>`feat/web-ui` |
 | **Hiển** | `lan-chat-p2p/console_ui.py`<br>`lan-chat-p2p/tcp_manager.py` | - Hiện thực giao diện console không vỡ dòng đang gõ (`prompt_toolkit` + `patch_stdout`), bảng `/list` (`rich`), progress bar (`tqdm`)<br>- Hiện thực TCP acceptor & kết nối tới peer, 1 receiver thread/peer, lịch sử chat & `unread` counter (`Lock`)<br>- Hiện thực truyền/nhận file theo chunk chạy thread riêng, lưu vào `downloads/`, xóa partial file khi lỗi | `feat/console-ui`<br>`feat/tcp-manager` |
+| **Quang** | `REPORT.md`, `REPORT.pdf`<br>`lan-chat-p2p/tests/test_p2p.py` | - Hỗ trợ viết báo cáo kỹ thuật `REPORT.md`<br>- Hỗ trợ kiểm thử chức năng CLI, Web UI, đa peer và các kịch bản xử lý lỗi | `docs/report`<br>`test/integration` |
 
 > **Nguyên tắc chống xung đột:** Mỗi thành viên chỉ chỉnh sửa các file thuộc phần mình. Nếu cần đổi chữ ký hàm/class dùng chung, phải cập nhật `lan-chat-p2p/CONTRACTS.md` và thống nhất trước khi merge vào `main`.
 
