@@ -34,6 +34,9 @@ Socket_PQH/
 ├── GUIDE.md                      # Phân công công việc, lộ trình triển khai và checklist kiểm thử
 ├── REPORT.md                     # Báo cáo kỹ thuật đồ án (Markdown)
 ├── REPORT.pdf                    # Báo cáo kỹ thuật đồ án (định dạng tiểu luận ĐH KHTN - ĐHQG HCM)
+├── docs/                         # Hình ảnh capture Wireshark minh họa cho báo cáo
+│   ├── wireshark_udp.jpg         # Ảnh capture gói UDP broadcast HELLO (cổng 9999)
+│   └── wireshark_tcp.jpg         # Ảnh capture bắt tay TCP, Follow TCP Stream và FIN (cổng 5000)
 └── lan-chat-p2p/                 # Thư mục mã nguồn ứng dụng chính
     ├── downloads/
     │   └── .gitkeep              # Thư mục lưu file gửi/nhận qua TCP

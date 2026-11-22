@@ -12,7 +12,7 @@ BÁO CÁO KỸ THUẬT ĐỒ ÁN · LẬP TRÌNH MẠNG
 
 **Tóm tắt.** Ứng dụng cho phép các node trong cùng mạng LAN/Wi-Fi tự phát hiện nhau qua UDP broadcast, sau đó mở kết nối TCP trực tiếp để nhắn tin và chia sẻ tệp. Console CLI và Zalo PC Web UI là hai cách vận hành cùng lõi mạng Python. Báo cáo mô tả ranh giới giữa các module, cách bảo toàn khung dữ liệu khi có nhiều luồng, đường đi của tin nhắn và tệp, cùng kết quả kiểm thử có thể đối chiếu.
 
-**Phạm vi đối chiếu** · Repo Socket_PQH, nhánh `main` (cơ sở commit `74b4f08`, bổ sung `tests/test_p2p.py`) · 19/11/2026
+**Phạm vi đối chiếu** · Repo Socket_PQH, nhánh `main` (cơ sở commit `7b9a90a`, bổ sung capture Wireshark `demo_capture.pcapng`) · 22/11/2026
 
 ### Nội dung báo cáo
 
@@ -258,28 +258,28 @@ Tổng kết chạy `py -3.12 -m unittest discover -s tests -v`: **16/16 ca ki�
 
 `GUIDE.md` có checklist đã đánh dấu cho nhiều terminal CLI, giữ dòng đang gõ, tin đến từ peer thứ ba, tiến độ truyền tệp và dọn tệp nhận dở; các kịch bản lõi tương ứng hiện đã có thể tái lập tự động qua [`tests/test_p2p.py`](lan-chat-p2p/tests/test_p2p.py). Lưu ý môi trường chạy kiểm thử tự động `PromptSession` sử dụng `create_pipe_input` và `DummyOutput` thay cho console TTY vật lý, còn thao tác trực tiếp bằng chuột/bàn phím trên trình duyệt Chrome cần chạy thực tế khi demo.
 
-Ca **hai máy LAN/Wi-Fi** và **2 ảnh chụp Wireshark** hiện chưa có bằng chứng đính kèm. Để làm demo, chạy một node trên mỗi máy cùng LAN với tên khác nhau, dùng cùng cổng UDP và cổng TCP mặc định nếu còn trống. Kiểm tra thấy nhau qua `/list`, gửi và đáp một tin UTF-8, truyền một ảnh và so sánh tệp nhận trong `downloads/`. Bắt đầu capture trước khi hai node khởi chạy để thu cả discovery và giai đoạn thiết lập TCP. [GUIDE.md](GUIDE.md) · [Hướng dẫn chạy và demo](lan-chat-p2p/README.md).
+Ca **kiểm thử trên 2 máy LAN/Wi-Fi rời** hiện chưa có ảnh chụp trực tiếp trong tài liệu này. Hai ảnh chụp **Wireshark** thu từ phiên chạy thực tế hai instance trên cùng máy Windows (`Minh` cổng `5000` và `Quan` cổng `5001` qua giao diện loopback `127.0.0.1` / `127.255.255.255`) đã được đính kèm và phân tích ở mục 7.3. Để demo trực tiếp trên 2 máy LAN/Wi-Fi, chạy một node trên mỗi máy cùng LAN với tên khác nhau, dùng cùng cổng UDP và cổng TCP mặc định nếu còn trống; kiểm tra thấy nhau qua `/list`, gửi và đáp một tin UTF-8, truyền một ảnh và so sánh tệp nhận trong `downloads/`. [GUIDE.md](GUIDE.md) · [Hướng dẫn chạy và demo](lan-chat-p2p/README.md).
 
-### 7.3. Đọc capture UDP và TCP
+### 7.3. Phân tích capture UDP và TCP trên Wireshark
 
-Chọn card mạng LAN/Wi-Fi dùng để demo. Khi chạy hai instance trên cùng máy với `--bcast 127.255.255.255`, chọn giao diện capture loopback. Hai vị trí dưới đây dành cho ảnh thu từ buổi demo.
+Ảnh thu từ phiên chạy thực tế giữa `Minh` (`--port 5000`) và `Quan` (`--port 5001`) với `--bcast 127.255.255.255`, bắt bằng `Wireshark 4.6.10` / `Npcap` trên `Adapter for loopback traffic capture` (`demo_capture.pcapng`, tổng cộng `31` gói). Khi chạy trên 2 máy LAN/Wi-Fi rời, địa chỉ đích UDP broadcast sẽ là `255.255.255.255` thay cho `127.255.255.255`.
 
-> **Ảnh 1 · UDP Broadcast**  
-> Chèn ảnh Wireshark có danh sách datagram, cột thời gian, địa chỉ đích và vùng Packet Bytes.  
-> Bộ lọc `udp.port == 9999`
+![Hình 7.1. Ảnh Wireshark bắt các datagram UDP broadcast HELLO trên cổng 9999](docs/wireshark_udp.jpg)
 
-Trong cấu hình mặc định, tìm các datagram tới `255.255.255.255` ở cổng UDP 9999. Đọc payload dạng `HELLO|<name>|<tcp_port>|<status>` và đối chiếu cùng một địa chỉ nguồn qua nhiều dòng. `encode_hello` luôn dùng UTF-8. Với tên ASCII, toàn bộ payload cũng đọc được bằng ASCII. Hai lượt phát định kỳ cách nhau khoảng 3 giây. Gói phản hồi peer mới hoặc đổi `online` / `away` có thể xuất hiện giữa hai lượt. Nếu demo loopback, địa chỉ đích dự kiến là `127.255.255.255` theo đối số chạy.
+*Hình 7.1. Gói UDP broadcast `HELLO` trên cổng `9999` với bộ lọc `udp.port == 9999` (`12/31` gói được hiển thị).*
 
-> **Ảnh 2 · Bắt tay, dữ liệu và đóng kết nối TCP**  
-> Chèn ảnh danh sách segment và ô Follow TCP Stream của cùng phiên.  
-> Bộ lọc `tcp.port == 5000` hoặc thay 5000 bằng cổng nghe lúc demo.
+- **Phát hiện peer và trạng thái qua UDP (`udp.port == 9999`):** Các gói từ `127.0.0.1:9999` gửi tới `127.255.255.255:9999` lặp lại theo chu kỳ `3` giây (`0.000s`, `3.006s`, `6.011s`, `9.024s`). Xen giữa có các gói phản hồi tức thì khi peer mới xuất hiện (`t ≈ 0.0007s–0.0009s`) và gói đổi trạng thái (`/status away` ở Frame `7`, `t = 3.362236s`, `Len=20`, sau đó quay lại `online` ở Frame `8`, `t = 4.162612s`, `Len=22`). Khung **Packet Bytes** ở Frame `1` hiển thị nguyên vẹn payload `HELLO|Minh|5000|online`.
 
-1. Mở `/chat` sau khi bắt đầu capture. Xác định `[SYN]` từ cổng nguồn tạm thời tới cổng nghe, `[SYN, ACK]` theo chiều ngược lại và `[ACK]` từ bên khởi tạo.
-2. Quan sát các segment chở dữ liệu, thường có `[PSH, ACK]`, rồi chọn **Follow TCP Stream** để đọc luồng đã ghép. Tìm `PEER|…` ngay sau khi kết nối, `MSG|…` cùng payload UTF-8 và `FILE|…` trước byte ảnh. Ranh giới segment và cờ PSH có thể khác ranh giới khung ứng dụng.
-3. Gõ `/leave`. Tìm `BYE|` trong dữ liệu và segment có FIN, thường hiển thị `[FIN, ACK]`, ở giai đoạn đóng chiều gửi.
+![Hình 7.2. Ảnh Wireshark bắt tay ba bước TCP, luồng Follow TCP Stream (UTF-8) và đóng kết nối](docs/wireshark_tcp.jpg)
+
+*Hình 7.2. Phiên TCP `tcp.stream eq 0` trên cổng nghe `5000`: bắt tay ba bước (`Frames 9–11`), khung dữ liệu ghép qua **Follow TCP Stream (`UTF-8`, `132 bytes`)** và đóng kết nối (`Frames 26–27`).*
+
+1. **Thiết lập kết nối (`Frames 9–11`, `t ≈ 5.163s`):** Khi `Quan` mở `/chat Minh`, Wireshark ghi nhận đủ 3 gói bắt tay: `[SYN]` từ cổng tạm `51327 → 5000`, `[SYN, ACK]` chiều ngược lại `5000 → 51327` và `[ACK]` hoàn tất kết nối.
+2. **Dữ liệu ứng dụng (`Frames 12–24`) & Follow TCP Stream (`UTF-8`, `132 bytes`):** Chiều gửi từ `Quan` (màu đỏ) chứa lần lượt khung định danh `PEER|Quan|5001|`, tin nhắn `MSG|16|Chào bạn 👍`, khung tệp `FILE|demo_note.txt|30|Hello from LAN Chat P2P demo!` và lệnh thoát phiên `BYE|`; chiều phản hồi từ `Minh` (màu xanh) mang tin nhắn `MSG|31|Ok, mình đã nhận được!`.
+3. **Đóng kết nối (`Frames 26–29`, `t ≈ 8.968s`):** Sau khi gửi `BYE|` ở Frame `24`, lệnh `/leave` đóng chiều gửi bằng Frame `26` (`[FIN, ACK]`) và nhận xác nhận `Frame 27` (`[ACK]`), hoàn tất ngắt phiên sạch không gây `RST`.
 
 Tham chiếu thao tác và nguyên lý đọc capture. [Wireshark User’s Guide, mục 7.2](https://www.wireshark.org/docs/wsug_html_chunked/ChAdvFollowStreamSection.html) · [RFC 9293, mục 3.5](https://www.rfc-editor.org/rfc/rfc9293.html#section-3.5) · [RFC 9293, mục 3.6](https://www.rfc-editor.org/rfc/rfc9293.html#section-3.6).
 
 ### Kết luận
 
-Kết quả kiểm thử loopback xác nhận hai node dùng UDP để tìm và cập nhật hiện diện (bao gồm timeout 10 giây), sau đó dùng cùng phiên TCP cho tin nhắn UTF-8, hàng đợi `unread`, xử lý 4 tình huống lỗi và truyền tệp song song đúng từng byte qua cả Console CLI lẫn Zalo PC Web UI. `read_frame_header`, trường chiều dài và khóa gửi theo peer bảo toàn ranh giới khung trên luồng TCP. Demo trên 2 máy LAN/Wi-Fi và hai ảnh chụp Wireshark sẽ bổ sung bằng chứng thực tế trên hạ tầng mạng rời.
+Kết quả kiểm thử loopback xác nhận hai node dùng UDP để tìm và cập nhật hiện diện (bao gồm timeout 10 giây), sau đó dùng cùng phiên TCP cho tin nhắn UTF-8, hàng đợi `unread`, xử lý 4 tình huống lỗi và truyền tệp song song đúng từng byte qua cả Console CLI lẫn Zalo PC Web UI. `read_frame_header`, trường chiều dài và khóa gửi theo peer bảo toàn ranh giới khung trên luồng TCP. Hai ảnh chụp Wireshark đã xác minh trực quan gói broadcast UDP `HELLO`, bắt tay ba bước TCP, toàn bộ framing `PEER`/`MSG`/`FILE`/`BYE` và đóng phiên bằng `FIN`; demo trực tiếp trên 2 máy LAN/Wi-Fi rời sẽ bổ sung kiểm chứng thực địa trong buổi báo cáo.
